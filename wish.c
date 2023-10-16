@@ -41,6 +41,8 @@ void interactiveMode(){
                 pid_t child_pid = fork();
                 if (child_pid == 0) {
                     // This code block will be executed by the child process
+                    //if the user types ls -la /tmp, your shell should run the program 
+                    //bin/ls with the given arguments -la and /tmp (how does the shell know to run /bin/ls)
                     char *argv[] = {"ls", "-1", NULL};
                     if (access("/bin/ls", X_OK) == 0) {
                         execv("/bin/ls", argv);
