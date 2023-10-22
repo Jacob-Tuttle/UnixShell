@@ -86,7 +86,7 @@ void printPath(char **path, const int pathSize){
 }
 
 int main() {
-    char **path;//starting path
+    char **path = NULL;//starting path
     int pathSize=0; //nubmer of paths stored
     path = initilize_path(&pathSize);
 
