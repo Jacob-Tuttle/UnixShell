@@ -40,29 +40,55 @@ char* check_access(char **path, char *cmd, int pathSize){
     return "Empty";
 }
 
-char** update_path(char** currentPaths, int *pathSize, char *add){
+char** update_path(char** currentPaths, int *pathSize, char *add) {
+
+    //Creates a new path array of strings which will hold one
+    //additional string contained in add
     char** newPaths = (char**)malloc((*pathSize + 1) * sizeof(char*));
 
-    for(int i = 0; i< *pathSize;i++){
-        strcpy(newPaths[i],currentPaths[i]);
+
+
+    for (int i = 0; i < *pathSize; i++) {
+        newPaths[i] = (char*)malloc(strlen(currentPaths[i]) + 1);
+        strcpy(newPaths[i], currentPaths[i]);
     }
-    *pathSize+=1;
-    newPaths[*pathSize] = (char*)malloc(strlen(add) + 1);
+    //allocate space for a string which is the length of add
+    newPaths[*pathSize] = (char*)malloc(strlen(add+1));
     strcpy(newPaths[*pathSize], add);
+    //increase pathSize for newly added path
+    (*pathSize)++;
     free(currentPaths);
     return newPaths;
 }
 
-char** initilize_path(){
+char** clearPath(char **path, int *pathSize){
+    for(int i = 0; i<*pathSize; i++){
+        free(path[i]);
+    }
+    free(path);
+    *pathSize = 0;
+    return NULL;
+}
+
+
+char** initilize_path(int *Size){
     char** path = (char**)malloc(1 * sizeof(char*));
+    path[0] = (char*)malloc(strlen("/bin/") + 1);
     path[0] = "/bin/";
+    *Size+=1;
     return path;
+}
+
+void printPath(char **path, const int pathSize){
+    for(int i = 0; i < pathSize; i++){
+        printf("path %d: %s\n", i+1, path[i]);
+    }
 }
 
 int main() {
     char **path;//starting path
-    int pathSize = 1; //nubmer of paths stored
-    path = initilize_path();
+    int pathSize=0; //nubmer of paths stored
+    path = initilize_path(&pathSize);
 
     while(1){
         char *line = NULL, *token = NULL; //contains the entire line entered || stores individual tokens of line
@@ -121,14 +147,16 @@ int main() {
 
         arg[count] = NULL;
 
-        //process
+        //process line entered
         for(int j = 0; j < count; j++){
-            token = tokens[j];
+            token = tokens[j]; //current token being read
+
             //if cmd is not build in cmd
             if(check_Build_In(tokens[j]) == false){
                 pid_t child_pid = fork();
                 if (child_pid == 0) {
                     // This code block will be executed by the child process
+                    //if access is found returns location of executable
                     char* Loc=check_access(path,tokens[j],pathSize);
                     if(strcmp(Loc,"Empty") != 0){
                         execv(Loc,arg);
@@ -155,11 +183,17 @@ int main() {
                 }
                 else if(strcmp(tokens[j],"path") == 0){
                     //will update path and pathSize(number of paths stored)
-                    path = update_path(path,&pathSize, tokens[j+1]);
-                    printf("%d", pathSize);
-//                    for(int m = 0; m<pathSize;m++){
-//                        printf("%s/n",path[m]);
-//                    }
+                    if(count != 1){
+                        //adds all paths entered in path array
+                        for(int i = 1; i <count; i++){
+                            path = update_path(path,&pathSize, tokens[i]);
+                        }
+                        printPath(path,pathSize);
+                    }
+                    else{
+                        path = clearPath(path,&pathSize);
+                        printPath(path,pathSize);
+                    }
                 }
             }
             else{
